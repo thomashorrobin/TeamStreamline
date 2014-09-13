@@ -1,0 +1,7 @@
+Authorization: OAuth oauth_consumer_key="<consumer-key>", oauth_token="<token>", oauth_signature_method="PLAINTEXT", oauth_signature="<consumer-secret>&<token-secret>"
+
+Consumer key: 5815646823D13FA7222C0797A2749E60
+Consumer secret: 8A6E9A02BD6316ACA7CB3F2D57C28609
+
+OAuth Tocken = DC99C2BB1AF3B1E7F5697ECA4A35A959
+Secret = 2D204B3B4E0EFBB4DBE348B4E33068D3

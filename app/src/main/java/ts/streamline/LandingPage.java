@@ -12,9 +12,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.springframework.core.io.FileSystemResource;
@@ -81,6 +79,10 @@ public class LandingPage extends Activity {
         return true;
     }
 
+    public void dispText(String s){
+        guessText.setText(s);
+    }
+
     /*
      * Tells the phone's camera app to take a picture
      */
@@ -116,6 +118,7 @@ public class LandingPage extends Activity {
             preview.setImageBitmap(Bitmap.createScaledBitmap(bmp, 1024, (int)(1024*bmp.getWidth()/bmp.getHeight()), false));
             imageSet = true;
 
+            guessText.setText("Uploading");
             SendImageTask nt = new SendImageTask();
             nt.execute();
         }
@@ -133,10 +136,10 @@ public class LandingPage extends Activity {
     class SendImageTask extends AsyncTask<String, Void, String> {
 
         private Exception exception;
+        String name;
 
         protected String doInBackground(String... filePath) {
             try {
-                guessText.setText("Uploading");
                 HttpHeaders requestHeaders = new HttpHeaders();
                 requestHeaders.set("X-Mashape-Key", "sPsf3HHRaImshDvA64Him0jITDGxp1YeFqGjsnpxa2EgUvXWhV");
                 MultiValueMap<String, Object> message = new LinkedMultiValueMap<String, Object>();
@@ -146,52 +149,43 @@ public class LandingPage extends Activity {
                         message, requestHeaders);
                 RestTemplate restTemplate = new RestTemplate();
                 ResponseEntity<String> response = restTemplate.exchange("https://camfind.p.mashape.com/image_requests", HttpMethod.POST, requestEntity, String.class);
-                Log.i("SL",response.toString());
-                final Pattern pattern = Pattern.compile("\"token\" ?: ?\"([a-zA-Z0-9]*)\"\n");
+                Log.i("SL",response.getBody());
+
+                final Pattern pattern = Pattern.compile(".*\"token\":\"([^\"]*)\".*");
                 final Matcher matcher = pattern.matcher(response.getBody());
                 matcher.find();
-                return matcher.group(1);
-            } catch (Exception e) {
-                this.exception = e;
-                return null;
-            }
-        }
+                String token = matcher.group(1);
 
-        protected void onPostExecute(String result) {
-           GetImageResult gi = new GetImageResult(result);
-           gi.execute(result);
-        }
-    }
+                Log.i("SL", token);
 
-    class GetImageResult extends AsyncTask<String, Void, String> {
+                Thread.sleep(11000);
 
-        private Exception exception;
-        String k;
-
-        public GetImageResult(String s){
-            k = s;
-        }
-
-        protected String doInBackground(String... key) {
-            try {
-                guessText.setText("Uploaded, getting result");
-                HttpHeaders requestHeaders = new HttpHeaders();
+                requestHeaders = new HttpHeaders();
                 requestHeaders.set("X-Mashape-Key", "sPsf3HHRaImshDvA64Him0jITDGxp1YeFqGjsnpxa2EgUvXWhV");
-                String url = "https://camfind.p.mashape.com/image_responses/"+k;
-                RestTemplate restTemplate = new RestTemplate();
-                HttpEntity<String> request = new HttpEntity<String>(requestHeaders);
-                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
-                Log.i("SL",response.toString());
-               return response.getBody();
+                String url = "https://camfind.p.mashape.com/image_responses/"+token;
+                restTemplate = new RestTemplate();
+                message = new LinkedMultiValueMap<String, Object>();
+                requestEntity = new HttpEntity<MultiValueMap<String, Object>>(
+                        message, requestHeaders);
+                response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+                Log.i("SL", response.toString());
+
+                Pattern pattern2 = Pattern.compile(".*\"name\":\"([^\"]*)\".*");
+                Matcher matcher2 = pattern2.matcher(response.getBody());
+                matcher2.find();
+                name = matcher2.group(1);
+                Log.i("SL",name);
+                return name;
             } catch (Exception e) {
+                Log.i("SL",e.getMessage()+","+e.getCause());
                 this.exception = e;
                 return null;
             }
         }
 
-        protected void onPostExecute(String result) {
-            guessText.setText(result);
-            ((ProgressBar)findViewById(R.id.waitSpinner)).setVisibility(View.INVISIBLE);
+        @Override
+        protected void onPostExecute(String s) {
+            dispText(name);
         }
     }
 }

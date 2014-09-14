@@ -1,6 +1,8 @@
 package ts.streamline;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -20,10 +22,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 import java.text.ParseException;
 
 
@@ -43,10 +48,12 @@ public class BuyListing extends Activity {
         image = (ImageView) findViewById(R.id.imageView);
         text = (TextView) findViewById(R.id.textView);
         getListing();
-        text.append(item.Title+"\n");
+        text.append(item.Title + "\n");
         text.append("Price: "+item.PriceDisplay+"\n");
         text.append(item.Body);
 
+        //BitmapFactory.decodeFile(item.Photos.get(0).getValue().getLarge());
+        image.setImageBitmap(BitmapFactory.decodeFile(item.Photos.get(0).getValue().getLarge()));
 
     }
 

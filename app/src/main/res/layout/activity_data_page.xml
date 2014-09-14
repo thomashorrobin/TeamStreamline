@@ -27,7 +27,7 @@
         <ImageButton
             android:layout_width="160dp"
             android:layout_height="100dp"
-            android:id="@+id/btnRetake"
+            android:id="@+id/btnVl"
             android:src="@drawable/viewlstbtn"
             android:scaleType="fitCenter"
             android:layout_alignParentTop="true"
@@ -38,7 +38,7 @@
         <ImageButton
             android:layout_width="160dp"
             android:layout_height="100dp"
-            android:id="@+id/btnProcess"
+            android:id="@+id/btnList"
             android:src="@drawable/listitembtn"
             android:scaleType="fitCenter"
             android:background="@null"

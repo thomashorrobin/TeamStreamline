@@ -62,11 +62,16 @@ public class LandingPage extends Activity {
         ((ImageButton)findViewById(R.id.btnRetake)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 dispatchTakePictureIntent();
-                Intent launchSearch = new Intent(lp, TMListing.class);
-                launchSearch.putExtra("query", result);
-
             }
         });
+        ((ImageButton)findViewById(R.id.btnProcess)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent launchSearch = new Intent(lp, DataPage.class);
+                launchSearch.putExtra("query", result);
+                startActivity(launchSearch);
+            }
+        });
+
 
         dispatchTakePictureIntent();
     }

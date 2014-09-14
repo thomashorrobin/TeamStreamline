@@ -81,6 +81,8 @@
     <orderEntry type="jdk" jdkName="Android API 19 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="spring-android-rest-template-2.0.0.M1" level="project" />
+    <orderEntry type="library" exported="" name="xstream-1.4.7" level="project" />
+    <orderEntry type="library" exported="" name="xpp3_min-1.1.4c" level="project" />
     <orderEntry type="library" exported="" name="spring-android-core-2.0.0.M1" level="project" />
   </component>
 </module>

@@ -1,5 +1,7 @@
 package ts.streamline;
 
+import java.util.ArrayList;
+
 /**
  * Created by Thomas on 9/14/2014.
  */
@@ -8,6 +10,16 @@ public class SearchParameter {
     private String DisplayName;
     private String Name;
     private String Type;
+
+    public ArrayList<AttributeOption> getOptions() {
+        return Options;
+    }
+
+    public void setOptions(ArrayList<AttributeOption> options) {
+        Options = options;
+    }
+
+    private ArrayList<AttributeOption> Options;
 
     public SearchParameter(String displayName, String name, String type) {
         DisplayName = displayName;

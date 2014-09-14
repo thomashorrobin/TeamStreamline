@@ -4,5 +4,7 @@
     <string name="app_name">Streamline</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
+    <color name="teLightGrey">#e5e5e4</color>
+    <color name="teYellow">#fdd800</color>
+    <color name="teDarkGrey">#302e2b</color>
 </resources>

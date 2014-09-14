@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -43,8 +44,7 @@ public class LandingPage extends Activity {
     ImageView preview;
     TextView guessText;
     File iFile;
-    boolean hasImage = false;
-    boolean hasResult = false;
+    String result = null;
     String mCurrentPhotoPath;
     ProgressBar waitSpinner;
     Typeface museo;
@@ -56,8 +56,14 @@ public class LandingPage extends Activity {
         preview = (ImageView)findViewById(R.id.previewImg);
         guessText = (TextView)findViewById(R.id.guessText);
         waitSpinner = (ProgressBar)findViewById(R.id.waitSpinner);
-        museo = Typeface.createFromAsset(getAssets(), "assets\\Museo500-Regular.otf");
+        museo = Typeface.createFromAsset(getAssets(), "fonts/Museo500-Regular.otf");
         guessText.setTypeface(museo);
+        ((ImageButton)findViewById(R.id.btnRetake)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                dispatchTakePictureIntent();
+            }
+        });
+
         dispatchTakePictureIntent();
     }
 
@@ -95,6 +101,11 @@ public class LandingPage extends Activity {
     public void dispStatus(String s, boolean b){
         guessText.setText(s);
         waitSpinner.setVisibility((b) ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    public void setResult(String s){
+        result = s;
+        if(s==null){dispStatus("No results, try again",false);}
     }
 
     /*
@@ -139,7 +150,6 @@ public class LandingPage extends Activity {
             bmp = Bitmap.createScaledBitmap(bmp, (int)(w*scale), (int)(h*scale), false);
             preview.setRotation(90);
             preview.setImageBitmap(bmp);
-            hasImage = true;
 
             dispStatus("Uploading", true);
             SendImageTask nt = new SendImageTask();
@@ -245,6 +255,7 @@ public class LandingPage extends Activity {
         @Override
         protected void onPostExecute(String s) {
             dispStatus(name, false);
+            setResult(s);
         }
     }
 }

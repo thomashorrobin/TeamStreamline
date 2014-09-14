@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "20.0.0"
+    buildToolsVersion '20.0.0'
 
     defaultConfig {
         applicationId "ts.streamline"
@@ -31,11 +31,11 @@ android {
     }
 }
 repositories {
-    maven {
-        url 'http://repo.spring.io/milestone'
-    }
+    maven { url 'http://repo.spring.io/milestone' }
 }
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'org.springframework.android:spring-android-rest-template:2.0.0.M1'
+    compile('com.thoughtworks.xstream:xstream:1.4.7') { exclude module: 'xmlpull' }
+    compile 'joda-time:joda-time:2.4'
 }

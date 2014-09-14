@@ -48,6 +48,7 @@ public class LandingPage extends Activity {
     String mCurrentPhotoPath;
     ProgressBar waitSpinner;
     Typeface museo;
+    final LandingPage lp = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,9 @@ public class LandingPage extends Activity {
         ((ImageButton)findViewById(R.id.btnRetake)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 dispatchTakePictureIntent();
+                Intent launchSearch = new Intent(lp, TMListing.class);
+                launchSearch.putExtra("query", result);
+
             }
         });
 

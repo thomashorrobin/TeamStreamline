@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,7 +13,9 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.springframework.core.io.FileSystemResource;
@@ -32,7 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /*
- * First page the user sees, helps them take a picture
+ * First page the user sees, helps them take a picture and displays the output
  */
 public class LandingPage extends Activity {
 
@@ -40,8 +43,11 @@ public class LandingPage extends Activity {
     ImageView preview;
     TextView guessText;
     File iFile;
-    boolean imageSet = false;
-    boolean guessMade = false;
+    boolean hasImage = false;
+    boolean hasResult = false;
+    String mCurrentPhotoPath;
+    ProgressBar waitSpinner;
+    Typeface museo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +55,15 @@ public class LandingPage extends Activity {
         setContentView(R.layout.activity_landing_page);
         preview = (ImageView)findViewById(R.id.previewImg);
         guessText = (TextView)findViewById(R.id.guessText);
+        waitSpinner = (ProgressBar)findViewById(R.id.waitSpinner);
+        museo = Typeface.createFromAsset(getAssets(), "assets\\Museo500-Regular.otf");
+        guessText.setTypeface(museo);
         dispatchTakePictureIntent();
     }
 
-    String mCurrentPhotoPath;
-
+    /*
+     * Creates a blank image file prefixed by the date to write to later
+     */
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -79,8 +89,12 @@ public class LandingPage extends Activity {
         return true;
     }
 
-    public void dispText(String s){
+    /*
+     * Displays text and spinner status onscreen
+     */
+    public void dispStatus(String s, boolean b){
         guessText.setText(s);
+        waitSpinner.setVisibility((b) ? View.VISIBLE : View.INVISIBLE);
     }
 
     /*
@@ -108,20 +122,36 @@ public class LandingPage extends Activity {
     }
 
     /*
-     * A picture has been taken
+     * A picture has been taken, display onscreen
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             Log.i("SL", "File saved");
             Bitmap bmp = BitmapFactory.decodeFile(iFile.getAbsolutePath());
-            preview.setImageBitmap(Bitmap.createScaledBitmap(bmp, 1024, (int)(1024*bmp.getWidth()/bmp.getHeight()), false));
-            imageSet = true;
+            double scale = 1;
+            int w = bmp.getWidth();
+            int h = bmp.getHeight();
+            //Scale down so it works on phones
+            if(w>2048||h>2048){
+                scale = 2048.0/Math.max(w,h);
+            }
+            bmp = Bitmap.createScaledBitmap(bmp, (int)(w*scale), (int)(h*scale), false);
+            preview.setRotation(90);
+            preview.setImageBitmap(bmp);
+            hasImage = true;
 
-            guessText.setText("Uploading");
+            dispStatus("Uploading", true);
             SendImageTask nt = new SendImageTask();
             nt.execute();
         }
+    }
+
+    //Callback after image submitted
+    public void getRes(String token){
+        dispStatus("Processing",true);
+        GetGuess gg = new GetGuess(token);
+        gg.execute();
     }
 
     @Override
@@ -133,12 +163,16 @@ public class LandingPage extends Activity {
        return (id == R.id.action_settings)|| super.onOptionsItemSelected(item);
     }
 
+    /*
+     * Submit an image to the api, get back the token
+     */
     class SendImageTask extends AsyncTask<String, Void, String> {
 
         private Exception exception;
-        String name;
+        String token;
 
         protected String doInBackground(String... filePath) {
+            String token;
             try {
                 HttpHeaders requestHeaders = new HttpHeaders();
                 requestHeaders.set("X-Mashape-Key", "sPsf3HHRaImshDvA64Him0jITDGxp1YeFqGjsnpxa2EgUvXWhV");
@@ -154,26 +188,51 @@ public class LandingPage extends Activity {
                 final Pattern pattern = Pattern.compile(".*\"token\":\"([^\"]*)\".*");
                 final Matcher matcher = pattern.matcher(response.getBody());
                 matcher.find();
-                String token = matcher.group(1);
+                token = matcher.group(1);
 
-                Log.i("SL", token);
+                return token;
+            } catch (Exception e) {
+                Log.i("SL",e.getMessage()+","+e.getCause());
+                this.exception = e;
+                return null;
+            }
+        }
+        @Override
+        protected void onPostExecute(String s) {
+            getRes(s);
+        }
+    }
 
-                Thread.sleep(11000);
+    /*
+     * Use the token to fetch a guess as to what the image is
+     */
+    class GetGuess extends AsyncTask<String, Void, String> {
 
-                requestHeaders = new HttpHeaders();
+        private Exception exception;
+        String name;
+        String token;
+
+        public GetGuess(String t){
+            token = t;
+        }
+
+        protected String doInBackground(String... filePath) {
+            try {
+                Thread.sleep(11000);//This is high, add delay so api is ready with result
+                HttpHeaders requestHeaders = new HttpHeaders();
                 requestHeaders.set("X-Mashape-Key", "sPsf3HHRaImshDvA64Him0jITDGxp1YeFqGjsnpxa2EgUvXWhV");
                 String url = "https://camfind.p.mashape.com/image_responses/"+token;
-                restTemplate = new RestTemplate();
-                message = new LinkedMultiValueMap<String, Object>();
-                requestEntity = new HttpEntity<MultiValueMap<String, Object>>(
+                RestTemplate restTemplate = new RestTemplate();
+                MultiValueMap<String, Object> message = new LinkedMultiValueMap<String, Object>();
+                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<MultiValueMap<String, Object>>(
                         message, requestHeaders);
-                response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
                 Log.i("SL", response.toString());
 
-                Pattern pattern2 = Pattern.compile(".*\"name\":\"([^\"]*)\".*");
-                Matcher matcher2 = pattern2.matcher(response.getBody());
-                matcher2.find();
-                name = matcher2.group(1);
+                Pattern pattern = Pattern.compile(".*\"name\":\"([^\"]*)\".*");
+                Matcher matcher = pattern.matcher(response.getBody());
+                matcher.find();
+                name = matcher.group(1);
                 Log.i("SL",name);
                 return name;
             } catch (Exception e) {
@@ -185,7 +244,7 @@ public class LandingPage extends Activity {
 
         @Override
         protected void onPostExecute(String s) {
-            dispText(name);
+            dispStatus(name, false);
         }
     }
 }

@@ -50,7 +50,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="RESULT GOES HERE"
+        android:text="Waiting"
         android:id="@+id/guessText"
         android:gravity="center"
         android:layout_alignTop="@+id/waitSpinner"
